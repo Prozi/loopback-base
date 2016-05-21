@@ -48,14 +48,17 @@ module.exports = function(server) {
       var medication = req.params.medication;
       var viewsCount = database.ref('/views/count/' + medication);
       viewsCount.on('value', function(snapshot) {
+        var key   = snapshot.key;
         var value = normalizeValue(snapshot.val()) + 1;
         viewsCount.off('value');
         viewsCount.set(value);
-        res.send(`{"${medication}":${value}}`);
+        res.send(`{"${key}":${value}}`);
       });
     });
 
     console.info(successMessage);
+
+    server.use(router);
 
   }
 
