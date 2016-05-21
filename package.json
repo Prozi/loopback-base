@@ -9,6 +9,8 @@
     "posttest": "nsp check"
   },
   "dependencies": {
+    "angular": "^1.5.5",
+    "angular-route": "^1.5.5",
     "bootstrap3": "^3.3.5",
     "compression": "^1.0.3",
     "cors": "^2.5.2",
