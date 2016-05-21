@@ -23,6 +23,7 @@
     "loopback-connector-mongodb": "^1.15.2",
     "loopback-datasource-juggler": "^2.39.0",
     "paint-console": "0.0.1",
+    "path": "^0.12.7",
     "request": "^2.72.0",
     "rxnorm-js": "^0.1.0",
     "serve-favicon": "^2.0.1"
