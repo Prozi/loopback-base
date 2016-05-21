@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "server/server.js",
   "scripts": {
+    "migrate": "node bin/automigrate.js",
     "start": "node .",
     "pretest": "jshint .",
     "posttest": "nsp check"
