@@ -12,5 +12,9 @@
       "../common/mixins",
       "./mixins"
     ]
+  },
+  "Medication": {
+    "dataSource": "mongoDs",
+    "public": true
   }
 }

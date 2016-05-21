@@ -1,1 +1,11 @@
-{}
+{
+  "mongoDs": {
+    "host": "localhost",
+    "port": 27017,
+    "database": "pharmacy",
+    "password": "",
+    "name": "mongoDs",
+    "user": "",
+    "connector": "mongodb"
+  }
+}
