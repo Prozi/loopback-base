@@ -10,10 +10,11 @@
 
     this.name        = 'SearchCtrl';
     this.medication  = '';
-    this.picture     = '';
+    this.noImage     = '/assets/img/no-image.png';
+    this.picture     = this.noImage;
     this.querySearch = querySearch;
     this.noFireBase  = false;
-    this.noGoogle    = false;
+    this.noRxImage   = false;
     this.noRxNav     = false;
     this.selectedItemChange = selectedItemChange;
 
@@ -92,14 +93,14 @@
           if (json.nlmRxImages && json.nlmRxImages.length) {
             self.picture = json.nlmRxImages[0].imageUrl;
           } else {
-            self.picture = '';
+            self.picture = self.noImage;
           }
         })
         .error(function(data) {
-          self.picture = '';
-          console.log('google', data.error.status);
+          self.picture = self.noImage;
+          console.log('rximage', data.error.status);
           if (data.error.status === 404) {
-            self.noGoogle = true;
+            self.noRxImage = true;
           }
         });
 
@@ -131,7 +132,7 @@
                     md-selected-item-change="search.selectedItemChange(item)"
                     md-items="item in search.querySearch(search.searchText)"
                     md-item-text="item.display"
-                    md-min-length="3"
+                    md-min-length="2"
                     placeholder="Please write name of medication">
                   <md-item-template>
                     <span md-highlight-text="search.searchText" md-highlight-flags="^i">{{item.display}}</span>
@@ -141,16 +142,29 @@
                   </md-not-found>
                 </md-autocomplete>
               </form>
-              <div class="medication" ng-if="search.medication">
-                <div ng-if="!search.noGoogle && search.picture" class="drug-picture">
+              <div class="medication hidden-xs" ng-if="search.medication">
+                <a href="{{search.picture}}" target="_blank" ng-if="!search.noRxImage" class="medication-picture">
                   <img width="100%" ng-src="{{search.picture}}" alt="picture"/>
-                </div>
+                </a>
                 <div>
-                  <h2 class="medication-name" ng-if="!search.noRxNav">{{search.medication}}</h2>
+                  <h2 class="medication-name" ng-if="!search.noRxNav">
+                    {{search.medication}}
+                  </h2>
                   <p ng-if="!search.noFireBase">
                     <small>requested: {{search.count}}x times</small>
                   </p>
                 </div>
+              </div>
+              <div class="medication visible-xs" ng-if="search.medication">
+                <h2 class="medication-name" ng-if="!search.noRxNav">
+                  {{search.medication}}
+                </h2>
+                <p ng-if="!search.noFireBase">
+                  <small>requested: {{search.count}}x times</small>
+                </p>
+                <a href="{{search.picture}}" target="_blank" ng-if="!search.noRxImage" class="medication-picture">
+                  <img width="100%" ng-src="{{search.picture}}" alt="picture"/>
+                </a>
               </div>
             </md-content>
           `,

@@ -23,6 +23,8 @@ body {
 }
 
 md-content {
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 2px 1px -1px rgba(0,0,0,.12);
+  border-radius: 4px;
   background: #eee;
 }
 
@@ -67,11 +69,11 @@ md-content {
   padding: 70px 0 20px 0;
 }
 
-.drug-picture {
+.medication-picture {
   max-width: 25%;
   margin-right: 10px;
   float: left;
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 2px 1px -1px rgba(0,0,0,.12);
+  display: block;
 }
 
 .medication {
@@ -91,13 +93,15 @@ md-content {
 }
 
 @media (max-width: 767px) {
-  .drug-picture {
+  .medication {
+    text-align: center;
+  }
+  .medication-picture {
     width: 100%;
     max-width: 100%;
     margin-right: 0;
   }
-  .medication-name {
-    font-size: 20px;
+  .medication-picture {
     margin-top: 10px;
   }
 }
