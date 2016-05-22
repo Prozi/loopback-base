@@ -61,7 +61,7 @@ module.exports = function(server) {
           if (body && body.items && body.items.length && body.items[0].pagemap && body.items[0].pagemap.imageobject && body.items[0].pagemap.imageobject.length) {
             res.send(body.items[0].pagemap.imageobject[0].contenturl);
           } else {
-            res.sendStatus(404);
+            res.sendStatus(204);
           }
         }
       });

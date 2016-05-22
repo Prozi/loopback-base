@@ -9,10 +9,12 @@
     var self = this;
 
     this.name        = 'SearchCtrl';
-    this.states      = [];
-    this.drug        = '';
+    this.medication  = '';
     this.picture     = '';
     this.querySearch = querySearch;
+    this.noFireBase  = false;
+    this.noGoogle    = false;
+    this.noRxNav     = false;
     this.selectedItemChange = selectedItemChange;
 
     $scope.$on('$destroy', function() {
@@ -43,36 +45,56 @@
     function selectedItemChange(item) {
       if (item && item.value) {
 
+        var value = encodeURIComponent(item.value);
+
         // Update firebase counter
         $http({
-          url: `/firebase/${item.value}`, 
+          url: `/firebase/${value}`, 
           method: 'GET'
         })
         .success(function(json) {
+          console.log(json);
           self.count = json[item.value];
+        })
+        .error(function(data) {
+          self.count = '';
+          console.log('firebase', data.error.status);
+          if (data.error.status === 404) {
+            self.noFireBase = true;
+          }
         });
 
         // Search for image
         $http({
-          url: `/google/${item.value}`,
+          url: `/google/${value}`,
           method: 'GET'
         })
         .success(function(string) {
           self.picture = string;
         })
         .error(function(data) {
-          console.log(data);
           self.picture = '';
+          console.log('google', data.error.status);
+          if (data.error.status === 404) {
+            self.noGoogle = true;
+          }
         });
 
         // Get more information
         $http({
-          url: `https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${item.value}`,
+          url: `https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${value}`,
           method: 'GET'
         })
         .success(function(json) {
           if (json.drugGroup && json.drugGroup.conceptGroup) {
-            self.drug = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
+            self.medication = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
+          }
+        })
+        .error(function(data) {
+          self.medication = null;
+          console.log('rxnav', data.error.status);
+          if (data.error.status === 404) {
+            self.noRxNav = true;
           }
         });
 
@@ -117,22 +139,21 @@
                 </md-autocomplete>
               </form>
               <br/>
-              <table class="table table-bordered" ng-if="search.drug">
-                <tr>
+              <table class="table table-bordered" ng-if="search.medication">
+                <tr ng-if="!search.noRxNav">
                   <td class="col-md-6">Full name of selected medication</td>
-                  <td class="col-md-6">{{search.drug}}</td>
+                  <td class="col-md-6">{{search.medication}}</td>
                 </tr>
-                <tr>
+                <tr ng-if="!search.noFireBase">
                   <td>Total times medication was requested</td>
                   <td>{{search.count}}</td>
                 </tr>
-                <tr ng-if="search.picture">
+                <tr ng-if="!search.noGoogle">
                   <td>Picture &copy;Google</td>
-                  <td><img width="100%" class="drug-picture" ng-src="{{search.picture}}" alt="picture"/></td>
-                </tr>
-                <tr ng-if="!search.picture">
-                  <td>Picture &copy;Google</td>
-                  <td>(not found)</td>
+                  <td>
+                    <img ng-if="search.picture" width="100%" class="drug-picture" ng-src="{{search.picture}}" alt="picture"/>
+                    <span ng-if="!search.picture">(not found)</span>
+                  </td>
                 </tr>
               </table>
             </md-content>
