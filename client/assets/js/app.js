@@ -32,7 +32,7 @@
     }
 
     function querySearch (query) {
-      return getApi('/api/Medications?filter[where][name][regexp]=' + `/${query}/i`);
+      return getApi(`/api/Medications?filter[where][name][regexp]=/${query}/i`);
     }
 
     function selectedItemChange(item) {
@@ -45,7 +45,12 @@
     function($routeProvider, $locationProvider) {
       $routeProvider
         .when('/home', {
-          template: 'home',
+          template: `
+            <md-content class="md-padding">
+              <p>Welcome</p>
+              <p>Click search in navbar to search for medications.</p>
+            </md-content>
+          `,
           controller: 'DummyCtrl',
           controllerAs: 'home'
         })
@@ -122,9 +127,7 @@
     return {
       template: `
         <div id="body" class="container">
-          <div ng-view>
-            <p>App started :)</p>
-          </div>
+          <div ng-view></div>
         </div>
       `
     }
