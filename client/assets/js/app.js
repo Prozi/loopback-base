@@ -6,13 +6,11 @@
 
   ngApp.controller('SearchCtrl', ['$scope', '$http', '$q', '$log', '$mdUtil', function($scope, $http, $q, $log, $mdUtil) {
 
-    var self = this;
-
-    self.name        = 'SearchCtrl';
-    self.isDisabled  = false;
-    self.states      = [];
-    self.querySearch = querySearch;
-    self.selectedItemChange = selectedItemChange;
+    this.name        = 'SearchCtrl';
+    this.isDisabled  = false;
+    this.states      = [];
+    this.querySearch = querySearch;
+    this.selectedItemChange = selectedItemChange;
 
     $scope.$on('$destroy', function() {
       $mdUtil.enableScrolling();
@@ -40,7 +38,15 @@
     }
 
     function selectedItemChange(item) {
-      $log.info('Item changed to ' + JSON.stringify(item));
+      if (item && item.value) {
+        $http({
+          url: `/firebase/${item.value}`, 
+          method: 'GET'
+        })
+        .success(function(json) {
+          $log.log(json);
+        });
+      }
     }
 
   }]);
