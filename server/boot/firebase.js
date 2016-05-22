@@ -45,7 +45,7 @@ module.exports = function(server) {
     };
 
     router.get('/firebase/:medication', function (req, res) {
-      var medication = req.params.medication;
+      var medication = req.params.medication.replace(/[\.#\$\[\]]/g, '');
       var viewsCount = database.ref('/views/count/' + medication);
       viewsCount.on('value', function(snapshot) {
         var key   = snapshot.key;

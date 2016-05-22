@@ -53,7 +53,7 @@
         })
         .success(function(json) {
           console.log(json);
-          self.count = json[item.display];
+          self.count = json[Object.keys(json)[0]];
         })
         .error(function(data) {
           self.count = '';
