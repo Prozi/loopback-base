@@ -59,6 +59,10 @@
         })
         .success(function(string) {
           self.picture = string;
+        })
+        .error(function(data) {
+          console.log(data);
+          self.picture = '';
         });
 
         // Get more information
