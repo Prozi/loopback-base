@@ -36,3 +36,6 @@ inside project root: `firebase.creditentials.json`
 npm start
 ```
 
+# 3. License
+
+MIT

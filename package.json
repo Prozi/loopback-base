@@ -35,9 +35,9 @@
     "nsp": "^2.1.0"
   },
   "repository": {
-    "type": "",
-    "url": ""
+    "type": "git",
+    "url": "https://github.com/Prozi/loopback-base"
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
   "description": "loopback-base"
 }
