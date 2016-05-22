@@ -6,8 +6,10 @@ var path     = require('path');
 
 var app = module.exports = loopback();
 
-app.basePath = path.resolve(__dirname, '..', 'client');
-app.set('views', app.basePath);
+app.path = {};
+app.path.base = path.resolve(__dirname, '..');
+app.path.view = path.resolve(app.path.base, 'client');
+app.set('views', app.path.view);
 
 app.start = function() {
   // start the web server

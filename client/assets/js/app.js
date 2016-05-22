@@ -11,6 +11,7 @@
     this.name        = 'SearchCtrl';
     this.states      = [];
     this.drug        = '';
+    this.picture     = '';
     this.querySearch = querySearch;
     this.selectedItemChange = selectedItemChange;
 
@@ -42,6 +43,7 @@
     function selectedItemChange(item) {
       if (item && item.value) {
 
+        // Update firebase counter
         $http({
           url: `/firebase/${item.value}`, 
           method: 'GET'
@@ -50,16 +52,23 @@
           self.count = json[item.value];
         });
 
+        // Search for image
+        $http({
+          url: `/google/${item.value}`,
+          method: 'GET'
+        })
+        .success(function(string) {
+          self.picture = string;
+        });
+
+        // Get more information
         $http({
           url: `https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${item.value}`,
           method: 'GET'
         })
         .success(function(json) {
-          try {
-            var drug = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
-            self.drug = drug;
-         } catch (e) {
-            $log.log(e);
+          if (json.drugGroup && json.drugGroup.conceptGroup) {
+            self.drug = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
           }
         });
 
@@ -106,12 +115,20 @@
               <br/>
               <table class="table table-bordered" ng-if="search.drug">
                 <tr>
-                  <td>Full name of selected medication</td>
-                  <td>{{search.drug}}</td>
+                  <td class="col-md-6">Full name of selected medication</td>
+                  <td class="col-md-6">{{search.drug}}</td>
                 </tr>
                 <tr>
                   <td>Total times medication was requested</td>
                   <td>{{search.count}}</td>
+                </tr>
+                <tr ng-if="search.picture">
+                  <td>Picture &copy;Google</td>
+                  <td><img width="100%" class="drug-picture" ng-src="{{search.picture}}" alt="picture"/></td>
+                </tr>
+                <tr ng-if="!search.picture">
+                  <td>Picture &copy;Google</td>
+                  <td>(not found)</td>
                 </tr>
               </table>
             </md-content>
