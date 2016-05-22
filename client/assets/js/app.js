@@ -4,7 +4,7 @@
 
   var ngApp = angular.module('ngApp', ['ngMaterial', 'ngRoute']);
 
-  ngApp.controller('SearchCtrl', ['$http', '$q', '$log', function($http, $q, $log) {
+  ngApp.controller('SearchCtrl', ['$scope', '$http', '$q', '$log', '$mdUtil', function($scope, $http, $q, $log, $mdUtil) {
 
     var self = this;
 
@@ -13,6 +13,10 @@
     self.states      = [];
     self.querySearch = querySearch;
     self.selectedItemChange = selectedItemChange;
+
+    $scope.$on('$destroy', function() {
+      $mdUtil.enableScrolling();
+    });
 
     function getApi(query) {
       var deferred = $q.defer();
