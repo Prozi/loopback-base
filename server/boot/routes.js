@@ -7,4 +7,4 @@ module.exports = function(router) {
   };
   router.get('/home', home);
   router.get('/search', home);
-}
+};

@@ -6,13 +6,14 @@ var request = require('request');
 var rxnorm  = require('rxnorm-js');
 var app     = require('../server/server');
 var ds      = app.datasources.mongoDs;
+var api     = 'https://rxnav.nlm.nih.gov/REST/allconcepts.json?tty=BN';
 
 ds.automigrate('Medication', function(err) {
   if (err) throw err;
 
   console.info('importing drug list');
 
-  request.get('https://rxnav.nlm.nih.gov/REST/allconcepts.json?tty=BN', function(err, res, json) {
+  request.get(api, function(err, res, json) {
     if (err) throw err;
 
     json = JSON.parse(json);
