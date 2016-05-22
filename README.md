@@ -1,7 +1,7 @@
 # loopback-base
 Loopback app with mongodb, firebase, rest explorer
 
-# Install
+# 1. Install
 
 ## 1.a. Install node dependencies
 
