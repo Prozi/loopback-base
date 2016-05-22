@@ -30,23 +30,6 @@ You should put your firebase creditentials from json:
 
 inside project root: `firebase.creditentials.json`
 
-## 1.d. Add google custom search creditentials
-
-> This enables search for google image and is optional
-
-You should put your google search creditentials into json:
-> https://console.developers.google.com/apis/credentials
-
-### format:
-```javascript
-{
-  "id": "<YOUR ID>",
-  "apiKey": "<YOUR KEY>"
-}
-```
-
-inside project root: `google-search.creditentials.json`
-
 # 2. Usage
 
 ```bash
