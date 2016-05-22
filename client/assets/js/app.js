@@ -6,9 +6,11 @@
 
   ngApp.controller('SearchCtrl', ['$scope', '$http', '$q', '$log', '$mdUtil', function($scope, $http, $q, $log, $mdUtil) {
 
+    var self = this;
+
     this.name        = 'SearchCtrl';
-    this.isDisabled  = false;
     this.states      = [];
+    this.drug        = '';
     this.querySearch = querySearch;
     this.selectedItemChange = selectedItemChange;
 
@@ -39,13 +41,28 @@
 
     function selectedItemChange(item) {
       if (item && item.value) {
+
         $http({
           url: `/firebase/${item.value}`, 
           method: 'GET'
         })
         .success(function(json) {
-          $log.log(json);
+          self.count = json[item.value];
         });
+
+        $http({
+          url: `https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${item.value}`,
+          method: 'GET'
+        })
+        .success(function(json) {
+          try {
+            var drug = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
+            self.drug = drug;
+         } catch (e) {
+            $log.log(e);
+          }
+        });
+
       }
     }
 
@@ -69,16 +86,14 @@
             <md-content class="md-padding">
               <form ng-submit="$event.preventDefault()">
                 <p>Search for medication.</p>
+                <p>After 3 characters live search will begin.</p>
                 <md-autocomplete
-                    ng-disabled="search.isDisabled"
-                    md-no-cache="search.noCache"
                     md-selected-item="search.selectedItem"
-                    md-search-text-change="search.searchTextChange(search.searchText)"
                     md-search-text="search.searchText"
                     md-selected-item-change="search.selectedItemChange(item)"
                     md-items="item in search.querySearch(search.searchText)"
                     md-item-text="item.display"
-                    md-min-length="0"
+                    md-min-length="3"
                     placeholder="Please write name of medication">
                   <md-item-template>
                     <span md-highlight-text="search.searchText" md-highlight-flags="^i">{{item.display}}</span>
@@ -88,6 +103,17 @@
                   </md-not-found>
                 </md-autocomplete>
               </form>
+              <br/>
+              <table class="table table-bordered" ng-if="search.drug">
+                <tr>
+                  <td>Full name of selected medication</td>
+                  <td>{{search.drug}}</td>
+                </tr>
+                <tr>
+                  <td>Total times medication was requested</td>
+                  <td>{{search.count}}</td>
+                </tr>
+              </table>
             </md-content>
           `,
           controller: 'SearchCtrl',
