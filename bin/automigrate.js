@@ -3,7 +3,6 @@
 require('paint-console');
 
 var request = require('request');
-var rxnorm  = require('rxnorm-js');
 var app     = require('../server/server');
 var ds      = app.datasources.mongoDs;
 var api     = 'https://rxnav.nlm.nih.gov/REST/allconcepts.json?tty=BN';
