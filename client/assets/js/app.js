@@ -30,7 +30,7 @@
       .success(function(json) {
         deferred.resolve(json.map(function(medication) {
           return {
-            value: medication.name.toLowerCase(),
+            value  : medication.name.toLowerCase(),
             display: medication.name
           };
         })); 
@@ -45,16 +45,14 @@
     function selectedItemChange(item) {
       if (item && item.value) {
 
-        var value = encodeURIComponent(item.value);
-
         // Update firebase counter
         $http({
-          url: `/firebase/${value}`, 
+          url: `/firebase/${item.display}`, 
           method: 'GET'
         })
         .success(function(json) {
           console.log(json);
-          self.count = json[item.value];
+          self.count = json[item.display];
         })
         .error(function(data) {
           self.count = '';
@@ -64,25 +62,9 @@
           }
         });
 
-        // Search for image
-        $http({
-          url: `/google/${value}`,
-          method: 'GET'
-        })
-        .success(function(string) {
-          self.picture = string;
-        })
-        .error(function(data) {
-          self.picture = '';
-          console.log('google', data.error.status);
-          if (data.error.status === 404) {
-            self.noGoogle = true;
-          }
-        });
-
         // Get more information
         $http({
-          url: `https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${value}`,
+          url: `https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${item.value}`,
           method: 'GET'
         })
         .success(function(json) {
@@ -90,7 +72,7 @@
             if (json.drugGroup.conceptGroup) {
               self.medication = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
             } else if (json.drugGroup.name) {
-              self.medication = json.drugGroup.name;
+              self.medication = item.display;
             }
           }
         })
@@ -99,6 +81,25 @@
           console.log('rxnav', data.error.status);
           if (data.error.status === 404) {
             self.noRxNav = true;
+          }
+        });
+
+        $http({
+          url: `http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${item.value}&resolution=600`,
+          method: 'GET'
+        })
+        .success(function(json) {
+          if (json.nlmRxImages && json.nlmRxImages.length) {
+            self.picture = json.nlmRxImages[0].imageUrl;
+          } else {
+            self.picture = '';
+          }
+        })
+        .error(function(data) {
+          self.picture = '';
+          console.log('google', data.error.status);
+          if (data.error.status === 404) {
+            self.noGoogle = true;
           }
         });
 
@@ -124,8 +125,6 @@
           template: `
             <md-content class="md-padding">
               <form ng-submit="$event.preventDefault()">
-                <p>Search for medication.</p>
-                <p>After 3 characters live search will begin.</p>
                 <md-autocomplete
                     md-selected-item="search.selectedItem"
                     md-search-text="search.searchText"
@@ -142,24 +141,17 @@
                   </md-not-found>
                 </md-autocomplete>
               </form>
-              <br/>
-              <table class="table table-bordered" ng-if="search.medication">
-                <tr ng-if="!search.noRxNav">
-                  <td class="col-md-6">Full name of selected medication</td>
-                  <td class="col-md-6">{{search.medication}}</td>
-                </tr>
-                <tr ng-if="!search.noFireBase">
-                  <td>Total times medication was requested</td>
-                  <td>{{search.count}}</td>
-                </tr>
-                <tr ng-if="!search.noGoogle">
-                  <td>Picture &copy;Google</td>
-                  <td>
-                    <img ng-if="search.picture" width="100%" class="drug-picture" ng-src="{{search.picture}}" alt="picture"/>
-                    <span ng-if="!search.picture">(not found)</span>
-                  </td>
-                </tr>
-              </table>
+              <div class="medication" ng-if="search.medication">
+                <div ng-if="!search.noGoogle && search.picture" class="drug-picture">
+                  <img width="100%" ng-src="{{search.picture}}" alt="picture"/>
+                </div>
+                <div>
+                  <h2 class="medication-name" ng-if="!search.noRxNav">{{search.medication}}</h2>
+                  <p ng-if="!search.noFireBase">
+                    <small>requested: {{search.count}}x times</small>
+                  </p>
+                </div>
+              </div>
             </md-content>
           `,
           controller: 'SearchCtrl',
@@ -208,8 +200,10 @@
   ngApp.directive('appbody', function() {
     return {
       template: `
-        <div id="body" class="container">
-          <div ng-view></div>
+        <div id="body">
+          <div class="container">
+            <div ng-view></div>
+          </div>
         </div>
       `
     }

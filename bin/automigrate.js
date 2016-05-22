@@ -18,16 +18,16 @@ ds.automigrate('Medication', function(err) {
     json = JSON.parse(json);
 
     var medications = [];
-    var group, concept;
+    var group, concept, medication;
 
     for (group in json.minConceptGroup) {
       if (json.minConceptGroup.hasOwnProperty(group)) {
         for (concept in json.minConceptGroup[group]) {
           if (json.minConceptGroup[group].hasOwnProperty(concept)) {
+            medication = json.minConceptGroup[group][concept];
             medications.push({
-              name: json.minConceptGroup[group][concept].name,
-              price: 10,
-              producer: 'Jacek'
+              name  : medication.name,
+              rxcui : medication.rxcui
             });
           }
         }

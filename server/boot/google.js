@@ -43,7 +43,7 @@ module.exports = function(server) {
         cx    : creditentials.id,
         key   : creditentials.apiKey,
         image : true,
-        q     : query
+        q     : `${query}%20medication`
       };
     };
 
@@ -51,11 +51,12 @@ module.exports = function(server) {
     var search = google.customsearch('v1');
 
     router.get('/google/:medication', function(req, res) {
-      var medication = req.params.medication.replace(/-/g, ' ');
+      var medication = req.params.medication;
 
       search.cse.list(makeQuery(medication), function (err, body) {
         // Daily quota exceeded?
         if (err) {
+          console.warn('google search: daily quota exceeded');
           res.sendStatus(500);
         } else {
           if (body && body.items && body.items.length && body.items[0].pagemap && body.items[0].pagemap.imageobject && body.items[0].pagemap.imageobject.length) {

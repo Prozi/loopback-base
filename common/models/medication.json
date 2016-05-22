@@ -11,12 +11,8 @@
       "type": "string",
       "required": true
     },
-    "producer": {
+    "rxcui": {
       "type": "string",
-      "required": true
-    },
-    "price": {
-      "type": "number",
       "required": true
     }
   },
