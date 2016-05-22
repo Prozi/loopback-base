@@ -86,8 +86,12 @@
           method: 'GET'
         })
         .success(function(json) {
-          if (json.drugGroup && json.drugGroup.conceptGroup) {
-            self.medication = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
+          if (json.drugGroup) {
+            if (json.drugGroup.conceptGroup) {
+              self.medication = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
+            } else if (json.drugGroup.name) {
+              self.medication = json.drugGroup.name;
+            }
           }
         })
         .error(function(data) {
