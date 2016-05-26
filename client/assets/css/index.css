@@ -9,8 +9,12 @@ body, input {
   font-family: Verdana, Arial, sans-serif;  
 }
 
-p, a {
+p, a, h1, li {
   color: white;
+}
+
+h1 {
+  margin-top: 0;
 }
 
 p {

@@ -36,7 +36,17 @@ module.exports = (server) => {
       return isNaN(value) ? 0 : value;
     };
 
-    router.get('/firebase/:medication', (req, res) => {
+    // get stats
+    router.get('/firebase', (req, res) => {
+      let viewsCount = database.ref('/views/count/');
+      viewsCount.on('value', (snapshot) => {
+        viewsCount.off('value');
+        res.send(snapshot.val());
+      });
+    });
+
+    // update stats
+    router.post('/firebase/:medication', (req, res) => {
       let medication = req.params.medication.replace(/[\/\.#\$\[\]]/g, '');
       let viewsCount = database.ref('/views/count/' + medication);
       viewsCount.on('value', (snapshot) => {

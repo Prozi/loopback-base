@@ -4,7 +4,22 @@
 
   let ngApp = angular.module('ngApp', ['ngMaterial', 'ngRoute']);
 
-  ngApp.controller('SearchCtrl', ['$scope', '$http', '$q', '$log', '$mdUtil', function ($scope, $http, $q, $log, $mdUtil) {
+  ngApp.controller('StatsCtrl', ['$scope', '$http', '$q', function ($scope, $http, $q) {
+
+    const httpGet = (query) => 
+      $http({ 
+        url    : query, 
+        method : 'GET' 
+      });
+
+    httpGet(`/firebase`)
+      .success((json) => {
+        $scope.stats = json;
+      });
+
+  }]);
+
+  ngApp.controller('SearchCtrl', ['$scope', '$http', '$q', '$log', '$mdUtil', '$window', function ($scope, $http, $q, $log, $mdUtil, $window) {
 
     let self = this;
 
@@ -20,7 +35,7 @@
     // fix material autocomplete bug
     let fix = () => { $mdUtil.enableScrolling(); };
     $scope.$on('$destroy', fix);
-    window.onresize = fix;
+    $window.onresize = fix;
 
     const httpGet = (query) => 
       $http({ 
@@ -47,18 +62,21 @@
 
     this.updateFireBaseCounter = () => {
       let safe = this.safe(this.item.display);
-      httpGet(`/firebase/${safe}`)
-        .success((json) => {
-          console.log(json);
-          self.count = json[Object.keys(json)[0]];
-        })
-        .error((data) => {
-          self.count = '';
-          console.log('firebase', data.error.status);
-          if (data.error.status === 404) {
-            self.noFireBase = true;
-          }
-        });
+      $http({ 
+        url    : `/firebase/${safe}`, 
+        method : 'POST' 
+      })
+      .success((json) => {
+        console.log(json);
+        self.count = json[Object.keys(json)[0]];
+      })
+      .error((data) => {
+        self.count = '';
+        console.log('firebase', data.error.status);
+        if (data.error.status === 404) {
+          self.noFireBase = true;
+        }
+      });
     }
 
     this.getMoreInformation = () => {
@@ -117,11 +135,15 @@
         .when('/home', {
           template: `
             <md-content class="md-padding">
-              <p>Welcome</p>
-              <p>Click search in tool bar to search for medications.</p>
+              <h1>Welcome</h1>
+              <p>You can use above toolbar to:</p>
+              <ul>
+                <li>search for medication from database</li>
+                <li>get request statistics from firebase</li>
+              </ul>
             </md-content>
           `,
-          controller: 'DummyCtrl',
+          controller: 'HomeCtrl',
           controllerAs: 'home'
         })
         .when('/search', {
@@ -179,6 +201,17 @@
           controller: 'SearchCtrl',
           controllerAs: 'search'
         })
+        .when('/stats', {
+          template: `
+            <md-content class="md-padding">
+              <p ng-repeat="(key,value) in stats">
+                {{key}} - {{value}}
+              </p>
+            </md-content>
+          `,
+          controller: 'StatsCtrl',
+          controllerAs: 'stats'
+        })
         .otherwise({
           redirectTo: '/home'
         });
@@ -186,8 +219,8 @@
       $locationProvider.html5Mode(true);
   }]);
 
-  ngApp.controller('DummyCtrl', ['$routeParams', function ($routeParams) {
-    this.name   = 'DummyCtrl';
+  ngApp.controller('HomeCtrl', ['$routeParams', function ($routeParams) {
+    this.name   = 'HomeCtrl';
     this.params = $routeParams;
   }]);
 
@@ -196,14 +229,18 @@
         <md-toolbar>
           <div class="md-toolbar-tools">
             <div class="container">
-              <h2>
+              <h2 class="row">
                 <a href="/home">
                   <i class="material-icons">home</i>
-                  <span>Home</span>
+                  <span class="hidden-xs hidden-sm">Home</span>
                 </a>
                 <a href="/search">
                   <i class="material-icons">search</i>
-                  <span>Search</span>
+                  <span class="hidden-xs hidden-sm">Search</span>
+                </a>
+                <a href="/stats">
+                  <i class="material-icons">favorite</i>
+                  <span class="hidden-xs hidden-sm">Stats</span>
                 </a>
               </h2>
             </div>
