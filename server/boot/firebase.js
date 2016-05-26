@@ -23,9 +23,11 @@ module.exports = (server) => {
 
   let initFirebase = (server) => {
 
+    let creditentials = require(`${__dirname}/../../${creditentialsPath}`);
+
     firebase.initializeApp({
       serviceAccount: creditentialsPath,
-      databaseURL: 'https://amber-heat-1073.firebaseio.com',
+      databaseURL: `https://${creditentials.project_id}.firebaseio.com`,
     });
 
     let router   = server.loopback.Router();
