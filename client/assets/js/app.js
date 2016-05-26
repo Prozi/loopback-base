@@ -43,8 +43,11 @@
       return deferred.promise;
     };
 
-    this.updateFireBaseCounter = () => 
-      httpGet(`/firebase/${self.item.display}`)
+    this.safe = (name) => name.replace(/[\/\.#\$\[\]]/g, '');
+
+    this.updateFireBaseCounter = () => {
+      let safe = this.safe(this.item.display);
+      httpGet(`/firebase/${safe}`)
         .success((json) => {
           console.log(json);
           self.count = json[Object.keys(json)[0]];
@@ -56,9 +59,11 @@
             self.noFireBase = true;
           }
         });
+    }
 
-    this.getMoreInformation = () => 
-      httpGet(`https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${self.item.value}`)
+    this.getMoreInformation = () => {
+      let safe = this.safe(this.item.value);
+      httpGet(`https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${safe}`)
         .success((json) => {
           if (json.drugGroup) {
             if (json.drugGroup.conceptGroup) {
@@ -75,9 +80,11 @@
             self.noRxNav = true;
           }
         });
+    }
 
-    this.getImage = (item) => 
-      httpGet(`http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${self.item.value}&resolution=600`)
+    this.getImage = (item) => {
+      let safe = this.safe(this.item.value);
+      httpGet(`http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${safe}&resolution=600`)
         .success((json) => {
           if (json.nlmRxImages && json.nlmRxImages.length) {
             self.picture = json.nlmRxImages[0].imageUrl;
@@ -92,6 +99,7 @@
             self.noRxImage = true;
           }
         });
+    }
 
     this.selectedItemChange = (item) => {
       if (item && item.value) {
