@@ -15,6 +15,7 @@
     this.noFireBase  = false;
     this.noRxImage   = false;
     this.noRxNav     = false;
+    this.count       = 0;
 
     // fix material autocomplete bug
     $scope.$on('$destroy', () => {
@@ -42,8 +43,8 @@
       return deferred.promise;
     };
 
-    this.updateFireBaseCounter = (item) => 
-      httpGet(`/firebase/${item.display}`)
+    this.updateFireBaseCounter = () => 
+      httpGet(`/firebase/${self.item.display}`)
         .success((json) => {
           console.log(json);
           self.count = json[Object.keys(json)[0]];
@@ -56,14 +57,14 @@
           }
         });
 
-    this.getMoreInformation = (item) => 
-      httpGet(`https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${item.value}`)
+    this.getMoreInformation = () => 
+      httpGet(`https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${self.item.value}`)
         .success((json) => {
           if (json.drugGroup) {
             if (json.drugGroup.conceptGroup) {
               self.medication = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
             } else if (json.drugGroup.name) {
-              self.medication = item.display;
+              self.medication = self.item.display;
             }
           }
         })
@@ -76,7 +77,7 @@
         });
 
     this.getImage = (item) => 
-      httpGet(`http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${item.value}&resolution=600`)
+      httpGet(`http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${self.item.value}&resolution=600`)
         .success((json) => {
           if (json.nlmRxImages && json.nlmRxImages.length) {
             self.picture = json.nlmRxImages[0].imageUrl;
@@ -94,9 +95,10 @@
 
     this.selectedItemChange = (item) => {
       if (item && item.value) {
-        this.updateFireBaseCounter(item);
-        this.getMoreInformation(item);
-        this.getImage(item);
+        this.item = item;
+        this.updateFireBaseCounter();
+        this.getMoreInformation();
+        this.getImage();
       }
     };
 
