@@ -1,8 +1,8 @@
 'use strict';
 
-module.exports = function(router) {
-  var path = require('path');
-  var home = function(req, res) {
+module.exports = (router) => {
+  let path = require('path');
+  let home = (req, res) => {
     res.sendFile(path.resolve(router.path.view, 'index.html'));
   };
   router.get('/home', home);

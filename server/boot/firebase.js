@@ -1,55 +1,47 @@
 'use strict';
 
-module.exports = function(server) {
+module.exports = (server) => {
 
   require('paint-console');
 
-  var firebase = require('firebase');
-  var fs       = require('fs');
+  let firebase = require('firebase');
+  let fs       = require('fs');
 
-  var creditentialsPath = 'firebase.creditentials.json';
-  var where             = `inside project root: '${creditentialsPath}'`;
+  const creditentialsPath = 'firebase.creditentials.json';
+  const where             = `inside project root: '${creditentialsPath}'`;
 
-  var errorMessage = `
+  const errorMessage = `
     You should put your firebase creditentials from json:
     https://firebase.google.com/docs/auth/web/custom-auth#before-you-begin
     ${where}
   `;
-  var successMessage = `
+  const successMessage = `
     Success: Initialized firebase.
     Found firebase creditentials
     ${where}
   `;
 
-  fs.exists(creditentialsPath, function(exists) {
-      if (exists) {
-        initFirebase(server);
-      } else {
-        console.error(errorMessage);        
-      }
-  });
-
-  function initFirebase(server) {
+  let initFirebase = (server) => {
 
     firebase.initializeApp({
       serviceAccount: creditentialsPath,
       databaseURL: 'https://amber-heat-1073.firebaseio.com',
     });
 
-    var router   = server.loopback.Router();
-    var database = firebase.database();
+    let router   = server.loopback.Router();
+    let database = firebase.database();
 
-    var normalizeValue = function(value) {
+    let normalizeValue = (value) => {
       value = parseInt(value || 0, 10);
       return isNaN(value) ? 0 : value;
     };
 
-    router.get('/firebase/:medication', function (req, res) {
-      var medication = req.params.medication.replace(/[\.#\$\[\]]/g, '');
-      var viewsCount = database.ref('/views/count/' + medication);
-      viewsCount.on('value', function(snapshot) {
-        var key   = snapshot.key;
-        var value = normalizeValue(snapshot.val()) + 1;
+    router.get('/firebase/:medication', (req, res) => {
+      let medication = req.params.medication.replace(/[\.#\$\[\]]/g, '');
+      let viewsCount = database.ref('/views/count/' + medication);
+      viewsCount.on('value', (snapshot) => {
+        let key   = snapshot.key;
+        let value = normalizeValue(snapshot.val()) + 1;
         viewsCount.off('value');
         viewsCount.set(value);
         res.send(`{"${key}":${value}}`);
@@ -60,6 +52,14 @@ module.exports = function(server) {
 
     server.use(router);
 
-  }
+  };
+
+  fs.exists(creditentialsPath, (exists) => {
+      if (exists) {
+        initFirebase(server);
+      } else {
+        console.error(errorMessage);        
+      }
+  });
 
 };
