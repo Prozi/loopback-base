@@ -10,17 +10,17 @@
 
     this.name        = 'SearchCtrl';
     this.medication  = '';
-    this.noImage     = '/assets/img/no-image.png';
-    this.picture     = this.noImage;
+    this.noPicture   = '/assets/img/no-image.png';
+    this.picture     = this.noPicture;
     this.noFireBase  = false;
     this.noRxImage   = false;
     this.noRxNav     = false;
     this.count       = 0;
 
     // fix material autocomplete bug
-    $scope.$on('$destroy', () => {
-      $mdUtil.enableScrolling();
-    });
+    let fix = () => { $mdUtil.enableScrolling(); };
+    $scope.$on('$destroy', fix);
+    window.onresize = fix;
 
     const httpGet = (query) => 
       $http({ 
@@ -89,11 +89,11 @@
           if (json.nlmRxImages && json.nlmRxImages.length) {
             self.picture = json.nlmRxImages[0].imageUrl;
           } else {
-            self.picture = self.noImage;
+            self.picture = self.noPicture;
           }
         })
         .error(function(data) {
-          self.picture = self.noImage;
+          self.picture = self.noPicture;
           console.log('rximage', data.error.status);
           if (data.error.status === 404) {
             self.noRxImage = true;
@@ -118,7 +118,7 @@
           template: `
             <md-content class="md-padding">
               <p>Welcome</p>
-              <p>Click search in navbar to search for medications.</p>
+              <p>Click search in tool bar to search for medications.</p>
             </md-content>
           `,
           controller: 'DummyCtrl',
@@ -145,8 +145,14 @@
                 </md-autocomplete>
               </form>
               <div class="medication hidden-xs" ng-if="search.medication">
-                <a href="{{search.picture}}" target="_blank" ng-if="!search.noRxImage" class="medication-picture">
-                  <img width="100%" ng-src="{{search.picture}}" alt="picture"/>
+                <a 
+                  ng-if="!search.noRxImage" 
+                  ng-href="{{search.picture!==search.noPicture?search.picture:'#'}}" 
+                  ng-target="search.picture!==search.noPicture?'_blank':''" 
+                  class="medication-picture">
+                  <img width="100%" 
+                    ng-src="{{search.picture}}" 
+                    alt="picture"/>
                 </a>
                 <div>
                   <h2 class="medication-name" ng-if="!search.noRxNav">
@@ -185,30 +191,25 @@
     this.params = $routeParams;
   }]);
 
-  ngApp.directive('navbar', () => ({
+  ngApp.directive('toolbar', () => ({
     template: `
-      <nav class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand">
-              <img alt="LoopBack Base" src="favicon.ico">
-            </a>
+        <md-toolbar>
+          <div class="md-toolbar-tools">
+            <div class="container">
+              <h2>
+                <a href="/home">
+                  <i class="material-icons">home</i>
+                  <span>Home</span>
+                </a>
+                <a href="/search">
+                  <i class="material-icons">search</i>
+                  <span>Search</span>
+                </a>
+              </h2>
+            </div>
           </div>
-          <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-              <li><a href="/home">Home</a></li>
-              <li><a href="/search">Search</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </nav>
-    `
+        </md-toolbar>
+  `
   }));
 
   ngApp.directive('appbody', () => ({
@@ -223,7 +224,7 @@
 
   ngApp.directive('app', () => ({
     template: `
-      <navbar></navbar>
+      <toolbar></toolbar>
       <appbody></appbody>
     `
   }));
