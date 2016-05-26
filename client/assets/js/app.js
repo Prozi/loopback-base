@@ -1,61 +1,54 @@
 'use strict';
 
-(function() {
+(() => {
 
-  var ngApp = angular.module('ngApp', ['ngMaterial', 'ngRoute']);
+  let ngApp = angular.module('ngApp', ['ngMaterial', 'ngRoute']);
 
-  ngApp.controller('SearchCtrl', ['$scope', '$http', '$q', '$log', '$mdUtil', function($scope, $http, $q, $log, $mdUtil) {
+  ngApp.controller('SearchCtrl', ['$scope', '$http', '$q', '$log', '$mdUtil', function ($scope, $http, $q, $log, $mdUtil) {
 
-    var self = this;
+    let self = this;
 
     this.name        = 'SearchCtrl';
     this.medication  = '';
     this.noImage     = '/assets/img/no-image.png';
     this.picture     = this.noImage;
-    this.querySearch = querySearch;
     this.noFireBase  = false;
     this.noRxImage   = false;
     this.noRxNav     = false;
-    this.selectedItemChange = selectedItemChange;
 
-    $scope.$on('$destroy', function() {
+    // fix material autocomplete bug
+    $scope.$on('$destroy', () => {
       $mdUtil.enableScrolling();
     });
 
-    function getApi(query) {
-      var deferred = $q.defer();
-      $http({
-        url: query, 
-        method: 'GET'
-      })
-      .success(function(json) {
-        deferred.resolve(json.map(function(medication) {
-          return {
-            value  : medication.name.toLowerCase(),
-            display: medication.name
-          };
-        })); 
+    const httpGet = (query) => 
+      $http({ 
+        url    : query, 
+        method : 'GET' 
+      });
+
+    this.querySearch = (query) => {
+      // promise
+      let deferred = $q.defer();
+      httpGet(`/api/Medications?filter[where][name][regexp]=/${query}/i`)
+        .success((json) => {
+          deferred.resolve(json.map((medication) => {
+            return {
+              value  : medication.name.toLowerCase(),
+              display: medication.name
+            };
+          })); 
       });
       return deferred.promise;
-    }
+    };
 
-    function querySearch (query) {
-      return getApi(`/api/Medications?filter[where][name][regexp]=/${query}/i`);
-    }
-
-    function selectedItemChange(item) {
-      if (item && item.value) {
-
-        // Update firebase counter
-        $http({
-          url: `/firebase/${item.display}`, 
-          method: 'GET'
-        })
-        .success(function(json) {
+    this.updateFireBaseCounter = (item) => 
+      httpGet(`/firebase/${item.display}`)
+        .success((json) => {
           console.log(json);
           self.count = json[Object.keys(json)[0]];
         })
-        .error(function(data) {
+        .error((data) => {
           self.count = '';
           console.log('firebase', data.error.status);
           if (data.error.status === 404) {
@@ -63,12 +56,9 @@
           }
         });
 
-        // Get more information
-        $http({
-          url: `https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${item.value}`,
-          method: 'GET'
-        })
-        .success(function(json) {
+    this.getMoreInformation = (item) => 
+      httpGet(`https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${item.value}`)
+        .success((json) => {
           if (json.drugGroup) {
             if (json.drugGroup.conceptGroup) {
               self.medication = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
@@ -77,7 +67,7 @@
             }
           }
         })
-        .error(function(data) {
+        .error((data) => {
           self.medication = null;
           console.log('rxnav', data.error.status);
           if (data.error.status === 404) {
@@ -85,11 +75,9 @@
           }
         });
 
-        $http({
-          url: `http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${item.value}&resolution=600`,
-          method: 'GET'
-        })
-        .success(function(json) {
+    this.getImage = (item) => 
+      httpGet(`http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${item.value}&resolution=600`)
+        .success((json) => {
           if (json.nlmRxImages && json.nlmRxImages.length) {
             self.picture = json.nlmRxImages[0].imageUrl;
           } else {
@@ -104,13 +92,17 @@
           }
         });
 
+    this.selectedItemChange = (item) => {
+      if (item && item.value) {
+        this.updateFireBaseCounter(item);
+        this.getMoreInformation(item);
+        this.getImage(item);
       }
-    }
+    };
 
   }]);
 
-  ngApp.config(['$routeProvider', '$locationProvider',
-    function($routeProvider, $locationProvider) {
+  ngApp.config(['$routeProvider', '$locationProvider', ($routeProvider, $locationProvider) => {
       $routeProvider
         .when('/home', {
           template: `
@@ -178,61 +170,55 @@
       $locationProvider.html5Mode(true);
   }]);
 
-  ngApp.controller('DummyCtrl', ['$routeParams', function($routeParams) {
-    this.name = 'DummyCtrl';
+  ngApp.controller('DummyCtrl', ['$routeParams', function ($routeParams) {
+    this.name   = 'DummyCtrl';
     this.params = $routeParams;
   }]);
 
-  ngApp.directive('navbar', function() {
-    return {
-      template: `
-        <nav class="navbar navbar-default navbar-fixed-top">
-          <div class="container">
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand">
-                <img alt="LoopBack Base" src="favicon.ico">
-              </a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse">
-              <ul class="nav navbar-nav">
-                <li><a href="/home">Home</a></li>
-                <li><a href="/search">Search</a></li>
-              </ul>
-            </div><!--/.nav-collapse -->
+  ngApp.directive('navbar', () => ({
+    template: `
+      <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand">
+              <img alt="LoopBack Base" src="favicon.ico">
+            </a>
           </div>
-        </nav>
-      `    
-    };
-  });
-
-  ngApp.directive('appbody', function() {
-    return {
-      template: `
-        <div id="body">
-          <div class="container">
-            <div ng-view></div>
-          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li><a href="/home">Home</a></li>
+              <li><a href="/search">Search</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
         </div>
-      `
-    }
-  });
+      </nav>
+    `
+  }));
 
-  ngApp.directive('app', function() {
-    return {
-      template: `
-        <navbar></navbar>
-        <appbody></appbody>
-      `
-    };
-  });
+  ngApp.directive('appbody', () => ({
+    template: `
+      <div id="body">
+        <div class="container">
+          <div ng-view></div>
+        </div>
+      </div>
+    `
+  }));
 
-  angular.element(document).ready(function() {
+  ngApp.directive('app', () => ({
+    template: `
+      <navbar></navbar>
+      <appbody></appbody>
+    `
+  }));
+
+  angular.element(document).ready(() => {
     angular.bootstrap(document, ['ngApp']);
   });
 
