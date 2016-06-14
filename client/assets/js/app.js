@@ -60,61 +60,20 @@
 
     this.safe = (name) => name.replace(/[\/\.#\$\[\]]/g, '');
 
-    this.updateFireBaseCounter = () => {
-      let safe = this.safe(this.item.display);
-      $http({ 
-        url    : `/firebase/${safe}`, 
-        method : 'POST' 
-      })
-      .success((json) => {
-        console.log(json);
-        self.count = json[Object.keys(json)[0]];
-      })
-      .error((data) => {
-        self.count = '';
-        console.log('firebase', data.error.status);
-        if (data.error.status === 404) {
-          self.noFireBase = true;
-        }
-      });
-    }
-
     this.getMoreInformation = () => {
-      let safe = this.safe(this.item.value);
-      httpGet(`https://rxnav.nlm.nih.gov/REST/Prescribe/drugs?name=${safe}`)
+      let safe = this.safe(this.item.display);
+      httpGet(`/info/${safe}`)
         .success((json) => {
-          if (json.drugGroup) {
-            if (json.drugGroup.conceptGroup) {
-              self.medication = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
-            } else if (json.drugGroup.name) {
-              self.medication = self.item.display;
-            }
-          }
+          console.log(json);
+          self.count      = json.count || '?';
+          self.picture    = json.image || this.noPicture;
+          self.medication = json.info  || this.item.display;
         })
         .error((data) => {
-          self.medication = null;
-          console.log('rxnav', data.error.status);
+          self.count = '';
+          console.log('firebase', data.error.status);
           if (data.error.status === 404) {
-            self.noRxNav = true;
-          }
-        });
-    }
-
-    this.getImage = (item) => {
-      let safe = this.safe(this.item.value);
-      httpGet(`http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${safe}&resolution=600`)
-        .success((json) => {
-          if (json.nlmRxImages && json.nlmRxImages.length) {
-            self.picture = json.nlmRxImages[0].imageUrl;
-          } else {
-            self.picture = self.noPicture;
-          }
-        })
-        .error(function(data) {
-          self.picture = self.noPicture;
-          console.log('rximage', data.error.status);
-          if (data.error.status === 404) {
-            self.noRxImage = true;
+            self.noFireBase = true;
           }
         });
     }
@@ -122,9 +81,7 @@
     this.selectedItemChange = (item) => {
       if (item && item.value) {
         this.item = item;
-        this.updateFireBaseCounter();
         this.getMoreInformation();
-        this.getImage();
       }
     };
 
@@ -156,7 +113,7 @@
                     md-selected-item-change="search.selectedItemChange(item)"
                     md-items="item in search.querySearch(search.searchText)"
                     md-item-text="item.display"
-                    md-min-length="2"
+                    md-min-length="3"
                     placeholder="Please write name of medication">
                   <md-item-template>
                     <span md-highlight-text="search.searchText" md-highlight-flags="^i">{{item.display}}</span>

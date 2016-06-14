@@ -4,8 +4,9 @@ module.exports = (server) => {
 
   require('paint-console');
 
-  let firebase = require('firebase');
-  let fs       = require('fs');
+  const request  = require('request');
+  const firebase = require('firebase');
+  const fs       = require('fs');
 
   const creditentialsPath = 'firebase.creditentials.json';
   const where             = `inside project root: '${creditentialsPath}'`;
@@ -15,6 +16,7 @@ module.exports = (server) => {
     https://firebase.google.com/docs/auth/web/custom-auth#before-you-begin
     ${where}
   `;
+
   const successMessage = `
     Success: Initialized firebase.
     Found firebase creditentials
@@ -38,17 +40,51 @@ module.exports = (server) => {
       return isNaN(value) ? 0 : value;
     };
 
-    // get stats
-    router.get('/firebase', (req, res) => {
-      let viewsCount = database.ref('/views/count/');
-      viewsCount.on('value', (snapshot) => {
-        viewsCount.off('value');
-        res.send(snapshot.val());
-      });
-    });
+    function maybeEnd(res, obj) {
+      if (!--obj.waiting) {
+        res.send(obj);
+      }
+    }
 
-    // update stats
-    router.post('/firebase/:medication', (req, res) => {
+    function getImage(res, safe, obj) {
+      request.get(`http://rximage.nlm.nih.gov/api/rximage/1/rxnav?name=${safe}&resolution=600`, (error, response, json) => {
+        if (!error) {
+          onGetImage(JSON.parse(json), obj);
+        } else {
+          console.log(error);
+        }
+        maybeEnd(res, obj);
+      });
+    }
+
+    function getMoreInfo(res, safe, obj) {
+      request.get(`https://rxnav.nlm.nih.gov/REST/Prescribe/drugs.json?name=${safe}`, (error, response, json) => {
+        if (!error) {
+          onGetMoreInfo(JSON.parse(json), obj);
+        } else {
+          console.log(error);
+        }
+        maybeEnd(res, obj);
+      });
+    }
+
+    function onGetImage(json, obj) {
+      if (json.nlmRxImages && json.nlmRxImages.length) {
+        obj.image = json.nlmRxImages[0].imageUrl;
+      }
+    }
+
+    function onGetMoreInfo(json, obj) {
+      if (json.drugGroup) {
+        if (json.drugGroup.conceptGroup) {
+          obj.info = json.drugGroup.conceptGroup[1].conceptProperties[0].name;
+        }
+      }
+    }
+
+    // get stats
+    router.get('/info/:medication', (req, res) => {
+      let obj = { waiting: 3, info: null, image: null, count: null };
       let medication = req.params.medication.replace(/[\/\.#\$\[\]]/g, '');
       let viewsCount = database.ref('/views/count/' + medication);
       viewsCount.on('value', (snapshot) => {
@@ -56,7 +92,19 @@ module.exports = (server) => {
         let value = normalizeValue(snapshot.val()) + 1;
         viewsCount.off('value');
         viewsCount.set(value);
-        res.send(`{"${key}":${value}}`);
+        obj.count = value;
+        maybeEnd(res, obj);
+      });
+      getImage(res, medication, obj);
+      getMoreInfo(res, medication, obj);
+    });
+
+    // get stats
+    router.get('/firebase', (req, res) => {
+      let viewsCount = database.ref('/views/count/');
+      viewsCount.on('value', (snapshot) => {
+        viewsCount.off('value');
+        res.send(snapshot.val());
       });
     });
 
